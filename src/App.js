@@ -1,42 +1,22 @@
-import React, { Fragment, useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { Fragment, useState } from 'react';
 import './App.css';
+import { useCustomHooks } from './useCustomHooks';
 
 const App = () => {
-  const [data, setData] = useState({ hits: [] });
   const [query, setQuery] = useState('redux');
-  const [url, setUrl] = useState('http://hn.algolia.com/api/v1/search?query=redux');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setError] = useState('');
+  const { data, isLoading, isError, handleFetch } = useCustomHooks(
+    'http://hn.algolia.com/api/v1/search?query=redux',
+    { hits: [] }
+  );
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const result = await axios(url);
-      document.title = 'Fetched data';
-      setData(result.data);
-    } catch (error) {
-      setError(error);
-    }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    console.log('useEffect'); 
-    document.title = 'Fetching';
-    fetchData();
-  }, [url]);
-  
-
-  const handleFetch = (e) => {
-    e.preventDefault();
-    setUrl(`http://hn.algolia.com/api/v1/search?query=${query}`)
+  const onSubmit = (e) => {
+    handleFetch(e, `http://hn.algolia.com/api/v1/search?query=${query}`)
   }
 
   return (
     <Fragment>
      <form
-        onSubmit={handleFetch}
+        onSubmit={onSubmit}
       >
         <input
           type="text"
