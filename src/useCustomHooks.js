@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useState, useEffect, useReducer } from 'react';
 
-const reducer = (state, { type, payload }) => {
+const reducerLoading = (state, { type }) => {
   switch(type) {
     case 'FETCH_INIT': {
       return {
@@ -13,15 +13,33 @@ const reducer = (state, { type, payload }) => {
       return {
         ...state,
         isLoading: false,
-        isError: false,
-        data: payload
       }
     }
     case 'FETCH_ERROR': {
       return {
         ...state,
         isLoading: false,
-        isError: true
+      }
+    }
+    default: 
+      return {
+        ...state
+      }
+  }
+}
+
+const reducerData = (state, { type, payload }) => {
+  switch(type) {
+    case 'DATA_SUCCESS': {
+      return {
+        ...state,
+        data: payload,
+      }
+    }
+    case 'DATA_FAILURE': {
+      return {
+        ...state,
+        data: payload,
       }
     }
     default: 
@@ -35,11 +53,14 @@ export const useCustomHooks = (initialUrl, initialData) => {
   let didCancel = false;
   const [url, setUrl] = useState(initialUrl);
 
-  const [state, dispatch] = useReducer(reducer, {
+  const [state, dispatch] = useReducer(reducerLoading, {
     isLoading: false,
-    isError: false,
+  });
+
+  const [stateData, dispatchData] = useReducer(reducerData, {
     data: initialData,
   });
+
 
   const fetchData = async () => {
     dispatch({ type: 'FETCH_INIT' });
@@ -47,7 +68,8 @@ export const useCustomHooks = (initialUrl, initialData) => {
     try {
       const { data } = await axios(url);
       if (!didCancel) {
-        dispatch({ type: 'FETCH_SUCCESS', payload: data })
+        dispatch({ type: 'FETCH_SUCCESS' })
+        dispatchData({ type: 'DATA_SUCCESS', payload: data })
       }
     } catch (error) {
       if (!didCancel) {
@@ -58,8 +80,6 @@ export const useCustomHooks = (initialUrl, initialData) => {
 
   useEffect(() => {
     fetchData();
-    
-
     return () => {
       didCancel = true;
     }
@@ -70,5 +90,5 @@ export const useCustomHooks = (initialUrl, initialData) => {
     setUrl(api);
   }
 
-  return { ...state, handleFetch };
+  return { ...state, ...stateData, handleFetch };
 }
